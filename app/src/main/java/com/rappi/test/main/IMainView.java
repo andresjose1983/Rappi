@@ -1,18 +1,14 @@
 package com.rappi.test.main;
 
-import com.rappi.test.model.RedditResponse;
+import android.widget.ImageView;
+
+import com.rappi.test.model.Children;
 
 /**
  * Created by Mendez Fernandez on 30/12/2016.
  */
 
-public interface IMainView {
+public interface IMainView extends IMain{
 
-    void showProgressBar();
-
-    void showError(String error);
-
-    void hideProgressBar();
-
-    void showData(RedditResponse redditResponse);
+    void goToDetail(Children children, ImageView mIvReddirHeader);
 }

@@ -13,12 +13,14 @@ import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.rappi.test.adapter.RedditAdapter;
 import com.rappi.test.main.IMainView;
 import com.rappi.test.main.MainPresenter;
+import com.rappi.test.model.Children;
 import com.rappi.test.model.RedditResponse;
 
 import butterknife.BindView;
@@ -101,7 +103,12 @@ public class MainActivity extends AppCompatActivity implements IMainView,
         display.getSize(size);
         int width = size.x / span;
 
-        mRedditAdapter = new RedditAdapter(redditResponse.getData().getChildren(), width);
+        mRedditAdapter = new RedditAdapter(redditResponse.getData().getChildren(), this, width);
         mRvReddit.setAdapter(mRedditAdapter);
+    }
+
+    @Override
+    public void goToDetail(Children children, ImageView mIvReddirHeader) {
+        RedditDetailActivity.show(this, children, mIvReddirHeader);
     }
 }

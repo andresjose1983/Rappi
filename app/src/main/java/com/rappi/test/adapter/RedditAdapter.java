@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.rappi.test.R;
+import com.rappi.test.main.IMainView;
 import com.rappi.test.model.Children;
 import com.rappi.test.model.ChildrenResponse;
 
@@ -32,9 +33,11 @@ public class RedditAdapter extends RecyclerView.Adapter<RedditAdapter.RedditView
     private List<ChildrenResponse> mChildrens = new ArrayList<>();
     private List<ChildrenResponse> mChildrensFilter = new ArrayList<>();
     private int mWidthImage;
+    private IMainView mIMainView;
 
-    public RedditAdapter(List<ChildrenResponse> mChildrens, int mWidthImage) {
+    public RedditAdapter(List<ChildrenResponse> mChildrens, IMainView mIMainView, int mWidthImage) {
         this.mChildrens = mChildrens;
+        this.mIMainView = mIMainView;
         this.mChildrensFilter = new ArrayList<>(this.mChildrens);
         this.mWidthImage = mWidthImage;
     }
@@ -52,8 +55,8 @@ public class RedditAdapter extends RecyclerView.Adapter<RedditAdapter.RedditView
         Children children = mChildrens.get(position).getData();
         holder.mTvTitle.setText(children.getHeaderTitle());
 
-        Glide.with(holder.mIvReddirHeader.getContext()).load(children.getHeaderImg())
-                .override(mWidthImage, mWidthImage - 50 ).crossFade(500).into(holder.mIvReddirHeader);
+        Glide.with(holder.mIvReddirHeader.getContext()).load(children.getHeaderImg()).fitCenter()
+                .crossFade(500).into(holder.mIvReddirHeader);
     }
 
     @Override
@@ -73,6 +76,8 @@ public class RedditAdapter extends RecyclerView.Adapter<RedditAdapter.RedditView
         public RedditViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
+            itemView.setOnClickListener(view -> mIMainView.goToDetail(
+                    mChildrens.get(getAdapterPosition()).getData(), mIvReddirHeader));
         }
     }
 

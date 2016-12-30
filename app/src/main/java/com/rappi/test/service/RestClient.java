@@ -4,9 +4,14 @@ import com.rappi.test.App;
 import com.rappi.test.BuildConfig;
 import com.rappi.test.model.RedditResponse;
 
+import java.io.File;
+import java.util.concurrent.TimeUnit;
+
 import okhttp3.Cache;
+import okhttp3.CacheControl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -26,16 +31,40 @@ public final class RestClient {
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.cache(new Cache(App.getInstance().getCacheDir(), 10 * 1024 * 1024)) // 10 MB
+        File httpCacheDirectory = new File(App.getInstance().getCacheDir(), "responses");
+        int cacheSize = 10 * 1024 * 1024; // 10 MiB
+        Cache cache = new Cache(httpCacheDirectory, cacheSize);
+
+
+        httpClient.cache(cache) // 10 MB
                 .addInterceptor(chain -> {
+                    CacheControl.Builder cacheBuilder = new CacheControl.Builder();
+                    cacheBuilder.maxAge(0, TimeUnit.SECONDS);
+                    cacheBuilder.maxStale(365,TimeUnit.DAYS);
+                    CacheControl cacheControl = cacheBuilder.build();
+
                     Request request = chain.request();
-                    if (App.checkInternetConnection()) {
-                        request = request.newBuilder().header("Cache-Control", "public, max-age=" + 60).build();
-                    } else {
-                        request = request.newBuilder().header("Cache-Control", "public, only-if-cached, max-stale=" + 60 * 60 * 24 * 7).build();
+                    if(App.checkInternetConnection()){
+                        request = request.newBuilder()
+                                .cacheControl(cacheControl)
+                                .build();
                     }
-                    return chain.proceed(request);
+                    Response originalResponse = chain.proceed(request);
+                    if (App.checkInternetConnection()) {
+                        int maxAge = 60  * 60; // read from cache
+                        return originalResponse.newBuilder()
+                                .header("Cache-Control", "public, max-age=" + maxAge)
+                                .build();
+                    } else {
+                        int maxStale = 60 * 60 * 24 * 28; // tolerate 4-weeks stale
+                        return originalResponse.newBuilder()
+                                .header("Cache-Control", "public, only-if-cached, max-stale=" + maxStale)
+                                .build();
+                    }
                 });
+        httpClient.connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS);
 
         // add logging as last interceptor
         httpClient.addInterceptor(logging);
@@ -51,9 +80,10 @@ public final class RestClient {
 
     /**
      * GET JSON
+     *
      * @return
      */
-    public static Call<RedditResponse> get(){
+    public static Call<RedditResponse> get() {
         return mRedditService.get();
     }
 
