@@ -1,11 +1,17 @@
 package com.rappi.test;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
+import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.bumptech.glide.Glide;
@@ -21,6 +27,8 @@ public class RedditDetailActivity extends AppCompatActivity {
 
     @BindView(R.id.iv_photo_header)
     ImageView mIvPhotoHeader;
+    @BindView(R.id.iv_icon)
+    ImageView mIvIcon;
     @BindView(R.id.tb_reddit)
     Toolbar mToolbar;
     @BindView(R.id.tv_date)
@@ -31,6 +39,12 @@ public class RedditDetailActivity extends AppCompatActivity {
     TextView mTvSubTitle;
     @BindView(R.id.tv_description)
     TextView mTvDescription;
+    @BindView(R.id.ctl_reddit)
+    CollapsingToolbarLayout mCtlReddit;
+    @BindView(R.id.abl_reddit)
+    AppBarLayout mAblReddit;
+    @BindView(R.id.cv_icon)
+    CardView mCvIcon;
 
     public static void show(MainActivity mainActivity, Children children, ImageView mIvReddirHeader){
         Intent intent = new Intent(mainActivity, RedditDetailActivity.class)
@@ -69,7 +83,9 @@ public class RedditDetailActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        loadImageHeader(children);
+        //load image
+        loadImage(children.getHeaderImg(), mIvPhotoHeader);
+        loadImage(children.getIconImg(), mIvIcon);
 
         //User
         mTvUser.setText(children.getDisplayName());
@@ -83,11 +99,41 @@ public class RedditDetailActivity extends AppCompatActivity {
         //Date
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(children.getCreated());
-        mTvDate.setText(new SimpleDateFormat("EEEE MMMM d HH:mm:ss")
-                .format(calendar.getTime()));
+        mTvDate.setText(new SimpleDateFormat("EEEE MMMM d HH:mm:ss").format(calendar.getTime()));
+
+        mAblReddit.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
+            if (Math.abs(verticalOffset)-appBarLayout.getTotalScrollRange() == 0){
+                //  Collapsed
+                mCtlReddit.setTitle(children.getTitle());
+                mCvIcon.animate()
+                        .alpha(0.0f)
+                        .setDuration(150)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                super.onAnimationEnd(animation);
+                                mCvIcon.setVisibility(View.GONE);
+                            }
+                        });
+            }
+            else{
+                //Expanded
+                mCtlReddit.setTitle(null);
+                mCvIcon.animate()
+                        .alpha(1.0f)
+                        .setDuration(150)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                super.onAnimationEnd(animation);
+                                mCvIcon.setVisibility(View.VISIBLE);
+                            }
+                        });
+            }
+        });
     }
 
-    private void loadImageHeader(Children children){
-        Glide.with(this).load(children.getHeaderImg()).crossFade(500).into(mIvPhotoHeader);
+    private void loadImage(String url, ImageView imageView){
+        Glide.with(this).load(url).crossFade(500).into(imageView);
     }
 }

@@ -20,6 +20,9 @@ public class MainInteractor {
         this.getData();
     }
 
+    /**
+     * Get data from server
+     */
     public void getData(){
         Call<RedditResponse> redditResponseCall = RestClient.get();
         mIMainPresenter.showProgressBar();
